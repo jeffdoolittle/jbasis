@@ -1,2 +1,1 @@
 # jbasis
-java utilities
