@@ -145,6 +145,11 @@ public class ContainerImplTest {
     assertThrows(JBasisException.class, () -> svc.exec());
   }
   
+  @Test public void exception_when_registry_constructor_is_not_accessible() {
+    assertThrows(JBasisException.class, () -> new ContainerImpl(cfg -> cfg.apply(BadRegistry.class)));
+    
+  }
+
   /**
    * javadoc.
    */
@@ -336,4 +341,8 @@ class AnotherBadServiceImpl implements AnotherBadService {
   @AnnotationWithoutInterceptorType
   public void exec() {
   }
+}
+
+class BadRegistry extends Registry {
+  private BadRegistry() {}
 }

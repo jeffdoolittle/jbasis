@@ -4,10 +4,9 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
- * Lazy will memoize a Supplier function so that the 
- * Supplier is executed no more than once and, if 
- * executed, will return the same value on all sub-
- * sequent calls to get().
+ * Lazy will memoize a Supplier function so that the Supplier 
+ * is executed no more than once and, if executed, will return 
+ * the same value on all subsequent calls to get().
  */
 public final class Lazy<T> implements Supplier<T> {
   private Object lock = new Object();

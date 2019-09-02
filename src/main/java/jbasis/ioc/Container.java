@@ -28,6 +28,24 @@ public interface Container extends AutoCloseable {
   <T> Optional<T> tryResolve(Class<T> cls);
 
   /**
+   * Creates a scoped container based on the configuration of 
+   * the parent container.
+   * <p>
+   * Singletons will be resolved from the parent container.
+   * <p>
+   * Scoped services will be resolved within the Scoped 
+   * container and will operate as Singletons within the 
+   * Scoped context.
+   * <p>
+   * Transient services will be resolved on a per-call basis 
+   * in the same fashion as they would be from the parent
+   * container.
+   * 
+   * @return the scoped container
+   */
+  Container createScope();
+
+  /**
    * Closes all registered services implementing Closeable or AutoCloseable.
    * Any services not implementing these interfaces are ignored.
    */
