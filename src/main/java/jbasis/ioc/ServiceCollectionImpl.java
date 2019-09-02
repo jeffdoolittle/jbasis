@@ -28,6 +28,11 @@ public final class ServiceCollectionImpl implements ServiceCollection {
   }
 
   @Override
+  public <T> void addScoped(Class<T> serviceType, Function<Container, T> factory) {
+    addDescriptor(ServiceLifetime.SCOPED, serviceType, factory);
+  }
+
+  @Override
   public <T> void addTransient(Class<T> serviceType, Function<Container, T> factory) {
     addDescriptor(ServiceLifetime.TRANSIENT, serviceType, factory);
   }
