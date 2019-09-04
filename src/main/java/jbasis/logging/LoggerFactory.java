@@ -29,7 +29,7 @@ public class LoggerFactory {
    */
   public static Logger get(Class<?> cls) {
     if (loggerFactoryFunction == null) {
-      throw new UnsupportedOperationException("You must configure a logger factory with `registryFactory`");
+      throw new UnsupportedOperationException("You must configure a logger factory with `registerFactory`");
     }
     return loggerFactoryFunction.apply(cls);
   }

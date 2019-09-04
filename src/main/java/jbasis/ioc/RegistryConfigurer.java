@@ -15,37 +15,80 @@ public interface RegistryConfigurer {
    * Adds a service factory with the SINGLETON lifecycle to the 
    * registry configuration.
    * 
-   * @param <T> the type of service
+   * @param <S> the type of service
+   * @param <I> the type of implementation
    * @param serviceType the service class type
    * @param factory the factory for creating the service instance
    * @return the service instance
+  */
+  public <S, I extends S> RegistryConfigurer addSingleton(Class<S> serviceType,
+      Function<Container, I> factory);
+
+  /**
+   * Adds a service factory with the SINGLETON lifecycle to the 
+   * registry configuration.
+   *
+   * @param <S> the type of service
+   * @param <I> the type of implementation
+   * @param serviceType the service class type
+   * @param implementationType the implementation class type
+   * @return the service instance
    */
-  public <T> RegistryConfigurer addSingleton(Class<T> serviceType,
-      Function<Container, T> factory);
+  public <S, I extends S> RegistryConfigurer addSingleton(
+      Class<S> serviceType, Class<I> implementationType);
 
   /**
    * Adds a service factory with the SCOPED lifecycle to the 
    * registry configuration.
    * 
-   * @param <T> the type of service
+   * @param <S> the type of service
+   * @param <I> the type of implementation
    * @param serviceType the service class type
    * @param factory the factory for creating the service instance
    * @return the service instance
    */
-  public <T> RegistryConfigurer addScoped(Class<T> serviceType,
-      Function<Container, T> factory);
+  public <S, I extends S> RegistryConfigurer addScoped(Class<S> serviceType,
+      Function<Container, I> factory);
+
+  /**
+   * Adds a service factory with the SCOPED lifecycle to the 
+   * registry configuration.
+   *
+   * @param <S> the type of service
+   * @param <I> the type of implementation
+   * @param serviceType the service class type
+   * @param implementationType the implementation class type
+   * @return the service instance
+   */
+  public <S, I extends S> RegistryConfigurer addScoped(
+      Class<S> serviceType, Class<I> implementationType);
 
   /**
    * Adds a service factory with the TRANSIENT lifecycle to the 
    * registry configuration.
    * 
-   * @param <T> the type of service
+   * @param <S> the type of service
+   * @param <I> the type of implementation
    * @param serviceType the service class type
-   * @param factory the factory for creating a service instance
-   * @return a service instance
+   * @param factory the factory for creating the service instance
+   * @return the service instance
    */
-  public <T> RegistryConfigurer addTransient(Class<T> serviceType,
-      Function<Container, T> factory);
+  public <S, I extends S> RegistryConfigurer addTransient(Class<S> serviceType,
+      Function<Container, I> factory);
+
+  /**
+   * Adds a service factory with the TRANSIENT lifecycle to the 
+   * registry configuration.
+   *
+   * @param <S> the type of service
+   * @param <I> the type of implementation
+   * @param serviceType the service class type
+   * @param implementationType the implementation class type
+   * @return the service instance
+   */
+  public <S, I extends S> RegistryConfigurer addTransient(
+      Class<S> serviceType, Class<I> implementationType);
+
 }
 
 class RegistryConfigurerImpl implements RegistryConfigurer {
@@ -58,28 +101,57 @@ class RegistryConfigurerImpl implements RegistryConfigurer {
     this.actions = actions;
   }
 
+  private <S, I extends S> void add(Class<S> serviceType, ServiceLifetime lifetime,
+    Function<Container, I> factory) {
+      actions.add(x -> x.add(serviceType, lifetime, factory));
+      logger.info("Registered {} {}", lifetime, serviceType.getName());
+    }
+
+  private <S, I extends S> void add(Class<S> serviceType, ServiceLifetime lifetime,
+      Class<I> implementationType) {
+    actions.add(x -> x.add(serviceType, lifetime, implementationType));
+    logger.info("Registered {} {} -> {}", lifetime, serviceType.getName());
+  }
+
   @Override
-  public <T> RegistryConfigurer addSingleton(Class<T> serviceType,
-      Function<Container, T> factory) {
-    actions.add(x -> x.addSingleton(serviceType, factory));
-    logger.info("Registered Singleton Service " + serviceType.getName());
+  public <S, I extends S> RegistryConfigurer addSingleton(Class<S> serviceType,
+      Function<Container, I> factory) {
+    add(serviceType, ServiceLifetime.SINGLETON, factory);
     return this;
   }
 
   @Override
-  public <T> RegistryConfigurer addScoped(Class<T> serviceType,
-      Function<Container, T> factory) {
-    actions.add(x -> x.addScoped(serviceType, factory));
-    logger.info("Registered Scoped Service " + serviceType.getName());
+  public <S, I extends S> RegistryConfigurer addScoped(Class<S> serviceType,
+      Function<Container, I> factory) {
+    add(serviceType, ServiceLifetime.SCOPED, factory);
     return this;
   }
 
   @Override
-  public <T> RegistryConfigurer addTransient(Class<T> serviceType,
-      Function<Container, T> factory) {
-    actions.add(x -> x.addTransient(serviceType, factory));
-    logger.info("Registered Transient Service " + serviceType.getName());
+  public <S, I extends S> RegistryConfigurer addTransient(Class<S> serviceType,
+      Function<Container, I> factory) {
+    add(serviceType, ServiceLifetime.TRANSIENT, factory);
     return this;
   }
 
+  @Override
+  public <S, I extends S> RegistryConfigurer addSingleton(Class<S> serviceType, 
+      Class<I> implementationType) {
+    add(serviceType, ServiceLifetime.SINGLETON, implementationType);
+    return this;
+  }
+
+  @Override
+  public <S, I extends S> RegistryConfigurer addScoped(Class<S> serviceType, 
+      Class<I> implementationType) {
+    add(serviceType, ServiceLifetime.SCOPED, implementationType);
+    return this;
+  }
+
+  @Override
+  public <S, I extends S> RegistryConfigurer addTransient(Class<S> serviceType, 
+      Class<I> implementationType) {
+    add(serviceType, ServiceLifetime.TRANSIENT, implementationType);
+    return this;
+  }
 }

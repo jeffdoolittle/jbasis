@@ -50,7 +50,10 @@ public class InterceptionInvocationHandler implements InvocationHandler {
     Deque<Interceptor> interceptors = resolveInterceptors(implementationMethod);
 
     for (Interceptor interceptor : interceptors) {
-      interceptor.beforeInvoke(proxy, target, implementationMethod, args);
+      boolean continueExecuting = interceptor.beforeInvoke(proxy, target, implementationMethod, args);
+      if (!continueExecuting) {
+        return null;
+      }
     }
 
     Object result = null;

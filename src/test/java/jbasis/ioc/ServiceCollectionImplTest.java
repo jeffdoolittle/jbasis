@@ -21,7 +21,7 @@ public class ServiceCollectionImplTest {
     
     ServiceCollection collection = new ServiceCollectionImpl();
 
-    collection.addSingleton(String.class, x -> "hello, container!");
+    collection.add(String.class, ServiceLifetime.SINGLETON, x -> "hello, container!");
 
     ServiceDescriptor descriptor = (ServiceDescriptor)StreamSupport
         .stream(collection.spliterator(), false).toArray()[0];
@@ -34,8 +34,8 @@ public class ServiceCollectionImplTest {
   @Test public void last_registered_wins_when_registering_the_same_service_twice() {
     ServiceCollection collection = new ServiceCollectionImpl();
 
-    collection.addSingleton(String.class, x -> "one");
-    collection.addSingleton(String.class, x -> "two");
+    collection.add(String.class, ServiceLifetime.SINGLETON, x -> "one");
+    collection.add(String.class, ServiceLifetime.SINGLETON, x -> "two");
 
     ServiceDescriptor sd = StreamSupport.stream(collection.spliterator(), false)
     .filter(x -> x.getServiceType() == String.class)

@@ -50,7 +50,5 @@ public abstract class Registry {
    */
   public final void register(Consumer<RegistryConfigurer> action) {
     action.accept(configurer);
-  }
-
-  
+  }  
 }

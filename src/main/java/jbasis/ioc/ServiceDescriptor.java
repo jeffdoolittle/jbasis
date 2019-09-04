@@ -9,6 +9,7 @@ public final class ServiceDescriptor {
 
   private Function<Container, Object> factory;
   private Class<?> serviceType;
+  private Class<?> implementationType;
   private ServiceLifetime serviceLifetime;
 
   private ServiceDescriptor() {}
@@ -16,18 +17,38 @@ public final class ServiceDescriptor {
   /**
    * Describes a service.
    * 
-   * @param <T> the type of service.
-   * @param serviceType the type of service.
-   * @param lifetime the lifetime of the service.
+   * @param <S> the type of service
+   * @param <I> the type of implementation
+   * @param serviceType the service class type
+   * @param lifetime the service lifetime
    * @param factory a factory for instantiating an instance of the service.
    * @return the service instance.
    */
-  public static <T> ServiceDescriptor init(Class<T> serviceType, ServiceLifetime lifetime,
-      Function<Container, T> factory) {
+  public static <S, I extends S> ServiceDescriptor init(Class<S> serviceType, 
+      ServiceLifetime lifetime, Function<Container, I> factory) {
     ServiceDescriptor descriptor = new ServiceDescriptor();
     descriptor.serviceType = serviceType;
     descriptor.serviceLifetime = lifetime;
     descriptor.factory = factory::apply;
+    return descriptor;
+  }
+
+  /**
+   * Describes a service.
+   * 
+   * @param <S> the type of service
+   * @param <I> the type of implementation
+   * @param serviceType the service class type
+   * @param lifetime the service lifetime
+   * @param implementationType the implementation class type
+   * @return the service instance.
+   */
+  public static <S, I extends S> ServiceDescriptor init(Class<S> serviceType, 
+      ServiceLifetime lifetime, Class<I> implementationType) {
+    ServiceDescriptor descriptor = new ServiceDescriptor();
+    descriptor.serviceType = serviceType;
+    descriptor.serviceLifetime = lifetime;
+    descriptor.implementationType = implementationType;
     return descriptor;
   }
 
@@ -37,6 +58,10 @@ public final class ServiceDescriptor {
 
   public Class<?> getServiceType() {
     return this.serviceType;
+  }
+
+  public Class<?> getImplementationType() {
+    return this.implementationType;
   }
 
   public ServiceLifetime getServiceLifetime() {
