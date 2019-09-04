@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.io.Closeable;
 import java.lang.annotation.ElementType;
@@ -146,8 +147,13 @@ public class ContainerImplTest {
   }
   
   @Test public void exception_when_registry_constructor_is_not_accessible() {
-    assertThrows(JBasisException.class, () -> new ContainerImpl(cfg -> cfg.apply(BadRegistry.class)));
-    
+    assertThrows(JBasisException.class, () -> new ContainerImpl(cfg -> cfg.apply(BadRegistry.class)));    
+  }
+
+  @Test public void can_short_circuit_execution_with_before_invoke() {
+    ServiceToShortCircuit svc = _container.resolve(ServiceToShortCircuit.class);
+    svc.exec();
+    assertFalse(svc.wasExecuted());
   }
 
   /**
@@ -345,4 +351,43 @@ class AnotherBadServiceImpl implements AnotherBadService {
 
 class BadRegistry extends Registry {
   private BadRegistry() {}
+}
+
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+@WithInterceptor(type = ShortCircuitInterceptor.class)
+@interface ShortCircuit {
+
+}
+
+class ShortCircuitInterceptor extends EmptyInterceptor {
+  private final ShortCircuit annotation;
+
+  public ShortCircuitInterceptor(ShortCircuit annotation) {
+    this.annotation = annotation;
+  }
+
+  @Override
+  public boolean beforeInvoke(Object proxy, Object target, Method method, Object[] args) {
+    return false;
+  }
+}
+
+interface ServiceToShortCircuit {
+  void exec();
+  boolean wasExecuted();
+}
+
+class ServiceToShortCircuitImpl implements ServiceToShortCircuit {
+  int executeCount;
+
+  @Profile(thresholdMilliseconds = 5)
+  @ShortCircuit
+  public void exec() {
+    executeCount++;
+  }
+
+  public boolean wasExecuted() {
+    return executeCount > 0;
+  }
 }

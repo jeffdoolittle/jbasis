@@ -1,12 +1,16 @@
 # Release Notes
 
+## GH-4
+
+Automatic dependency resolution.
+
 ## GH-2
 
-wip
+Implement scoped container.
 
 ## GH-1
 
-GH-1 Implement basic ioc and interception.
+Implement basic ioc and interception.
 
 Basic inversion of control container implementation with
 Singleton and Transient lifetime handling.

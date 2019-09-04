@@ -1,12 +1,19 @@
 package jbasis.ioc;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
+
 import jbasis.ioc.interception.InterceptionInvocationHandler;
 import jbasis.logging.Logger;
 import jbasis.logging.LoggerFactory;
@@ -59,21 +66,21 @@ public final class ContainerImpl implements Container, AutoCloseable {
     if (descriptor.getServiceLifetime() == ServiceLifetime.SINGLETON) {
       sf.factory = new Lazy<>(() -> {
         debug(initializingFormat, ServiceLifetime.SINGLETON, name);
-        Object service = createProxy(descriptor, sf);
+        Object service = createProxy(descriptor);
         logger.info(initializedFormat, ServiceLifetime.SINGLETON, service, name);
         return service;
       });
     } else if (descriptor.getServiceLifetime() == ServiceLifetime.SCOPED) {
       sf.factory = () -> {
         debug(initializingFormat, ServiceLifetime.SINGLETON, name);
-        Object service = createProxy(descriptor, sf);
+        Object service = createProxy(descriptor);
         logger.info(initializedFormat, ServiceLifetime.SINGLETON, service, name);
         return service;
       };
     } else {
       sf.factory = () -> {
         debug(initializingFormat, ServiceLifetime.SINGLETON, name);
-        Object service = createProxy(descriptor, sf);
+        Object service = createProxy(descriptor);
         logger.info(initializedFormat, ServiceLifetime.SINGLETON, service, name);
         return service;
       };
@@ -82,13 +89,61 @@ public final class ContainerImpl implements Container, AutoCloseable {
     suppliers.put(name, sf);
   }
 
-  private Object createProxy(ServiceDescriptor descriptor, ServiceFactory sf) {
-    Object service = descriptor.getFactory().apply(this);
-    if (sf.serviceType.isInterface()) {
+  private Object createProxy(ServiceDescriptor descriptor) {
+    Function<Container, Object> factory = descriptor.getFactory();
+    Object service = null;
+
+    if (factory != null) {
+      service = factory.apply(this);
+    } else {
+      service = constructService(descriptor);
+    }
+
+    if (descriptor.getServiceType().isInterface()) {
       service = Proxy.newProxyInstance(ContainerImpl.class.getClassLoader(),
-          new Class[] {sf.serviceType}, new InterceptionInvocationHandler(this, service));
+          new Class[] {descriptor.getServiceType()}, new InterceptionInvocationHandler(this, service));
     }
     return service;
+  }
+
+  private Object constructService(ServiceDescriptor descriptor) {
+    Constructor<?>[] constructors = descriptor.getImplementationType().getDeclaredConstructors();
+
+    Optional<Constructor<?>> optionalConstructor = Arrays.stream(constructors)
+      .sorted((x,y) -> Long.compare(y.getParameterTypes().length, x.getParameterTypes().length))
+      .findFirst();
+    
+    if (!optionalConstructor.isPresent()) {
+      throw new JBasisException("No constructors found for " + descriptor.getImplementationType().getTypeName());
+    }
+
+    Constructor<?> constructor = optionalConstructor.get();
+
+    List<Object> dependencies = resolveServiceDependencies(constructor);
+
+    try {
+      return constructor.newInstance(dependencies.toArray());
+    } catch (InvocationTargetException e) {
+      throw new JBasisException(e.getCause().getMessage(), e.getCause());
+    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException e) {
+      throw new JBasisException(e.getMessage(), e);
+    }
+  }
+
+  private List<Object> resolveServiceDependencies(Constructor<?> constructor) {
+    Class<?>[] dependencyTypes = constructor.getParameterTypes();
+    List<Object> dependencies = new ArrayList<>();
+    for(Class<?> dependencyType : dependencyTypes) {
+      String typeName = dependencyType.getTypeName();
+      if (!suppliers.containsKey(typeName)){
+        dependencies.add(null);
+      } else {
+        ServiceFactory dependencyFactory = suppliers.get(typeName);
+        Object dependency = dependencyFactory.factory.get();
+        dependencies.add(dependency);
+      }
+    }
+    return dependencies;
   }
 
   private class ServiceFactory {

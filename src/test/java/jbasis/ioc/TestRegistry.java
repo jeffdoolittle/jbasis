@@ -21,6 +21,7 @@ class TestRegistry extends Registry {
       cfg.addSingleton(Exception.class, x -> {
         throw new JBasisException("simulate service resolution failure");
       });
+      cfg.addSingleton(ServiceToShortCircuit.class, ServiceToShortCircuitImpl.class);
     });
   }
 }

@@ -23,35 +23,52 @@ public final class ServiceCollectionImpl implements ServiceCollection {
   }
 
   @Override
-  public <T> void addSingleton(Class<T> serviceType, Function<Container, T> factory) {
-    addDescriptor(ServiceLifetime.SINGLETON, serviceType, factory);
+  public <S, I extends S> void add(Class<S> serviceType, ServiceLifetime lifetime, 
+      Function<Container, I> factory) {
+    addDescriptor(serviceType, lifetime, factory);
   }
 
   @Override
-  public <T> void addScoped(Class<T> serviceType, Function<Container, T> factory) {
-    addDescriptor(ServiceLifetime.SCOPED, serviceType, factory);
-  }
-
-  @Override
-  public <T> void addTransient(Class<T> serviceType, Function<Container, T> factory) {
-    addDescriptor(ServiceLifetime.TRANSIENT, serviceType, factory);
+  public <S, I extends S> void add(Class<S> serviceType, ServiceLifetime lifetime, 
+      Class<I> implementationType) {
+    addDescriptor(serviceType, lifetime, implementationType);
   }
 
   /**
    * Adds a service descriptor to the collection.
 
-   * @param <T> the service type
+   * @param <S> the type of service
+   * @param <I> the type of implementation
+   * @param serviceType the service class type
    * @param lifetime the service lifecycle
-   * @param serviceType the service type class
    * @param factory the factory for creating a service instance
    */
-  public <T> void addDescriptor(ServiceLifetime lifetime, Class<T> serviceType,
-      Function<Container, T> factory) {
+  public <S, I extends S> void addDescriptor(Class<S> serviceType, ServiceLifetime lifetime, 
+      Function<Container, I> factory) {
     String serviceName = serviceType.getCanonicalName();
     if(serviceAlreadyRegistered(serviceName)) {
       logger.warn("{} already registered. Replacing with updated instance", serviceName);
     }
     ServiceDescriptor sd = ServiceDescriptor.init(serviceType, lifetime, factory);
+    services.put(serviceName, sd);
+  }
+
+  /**
+   * Adds a service descriptor to the collection.
+
+   * @param <S> the type of service
+   * @param <I> the type of implementation
+   * @param serviceType the service class type
+   * @param lifetime the service lifecycle
+   * @param implementationType the implementation class type
+   */
+  public <S, I extends S> void addDescriptor(Class<S> serviceType, ServiceLifetime lifetime, 
+      Class<I> implementationType) {
+    String serviceName = serviceType.getCanonicalName();
+    if(serviceAlreadyRegistered(serviceName)) {
+      logger.warn("{} already registered. Replacing with updated instance", serviceName);
+    }
+    ServiceDescriptor sd = ServiceDescriptor.init(serviceType, lifetime, implementationType);
     services.put(serviceName, sd);
   }
 
@@ -72,5 +89,5 @@ public final class ServiceCollectionImpl implements ServiceCollection {
   @Override
   public Spliterator<ServiceDescriptor> spliterator() {
     return services.values().spliterator();
-  }  
+  }
 }

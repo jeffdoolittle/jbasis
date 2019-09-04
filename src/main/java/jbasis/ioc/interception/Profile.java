@@ -31,11 +31,12 @@ class ProfileInterceptor extends EmptyInterceptor {
   }
 
   @Override
-  public void beforeInvoke(Object proxy, Object target, Method method, Object[] args) {
+  public boolean beforeInvoke(Object proxy, Object target, Method method, Object[] args) {
     String msg = String.format("Executing %s.%s", target, method.getName());
     Level level = Level.valueOf(profile.loggerDefaultPriority());
     logger.log(level, msg);
     start = System.nanoTime();
+    return true;
   }
 
   @Override

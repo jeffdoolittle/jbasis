@@ -7,9 +7,9 @@ import java.util.function.Function;
  */
 public interface ServiceCollection extends Iterable<ServiceDescriptor> {
 
-  public <T> void addSingleton(Class<T> serviceType, Function<Container, T> factory);
+  public <S, I extends S> void add(Class<S> serviceType, ServiceLifetime lifetime, 
+      Function<Container, I> factory);
 
-  public <T> void addScoped(Class<T> serviceType, Function<Container, T> factory);
-
-  public <T> void addTransient(Class<T> serviceType, Function<Container, T> factory);
+  public <S, I extends S> void add(Class<S> serviceType, 
+      ServiceLifetime lifetime, Class<I> implementationType);
 }

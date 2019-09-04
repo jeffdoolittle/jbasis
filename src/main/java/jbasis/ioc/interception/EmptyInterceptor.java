@@ -12,7 +12,9 @@ public abstract class EmptyInterceptor implements Interceptor {
   }
 
   @Override
-  public void beforeInvoke(Object proxy, Object target, Method method, Object[] args) {}
+  public boolean beforeInvoke(Object proxy, Object target, Method method, Object[] args) {
+    return true;
+  }
 
   @Override
   public void afterInvoke(Object proxy, Object target, Method method, Object[] args, 
