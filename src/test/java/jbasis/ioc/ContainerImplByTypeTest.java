@@ -25,13 +25,21 @@ public class ContainerImplByTypeTest {
 
     Container c = new ContainerImpl(cfg -> cfg.apply(r));
 
-    Singleton s = c.resolve(Singleton.class);
+    Singleton s1 = c.resolve(Singleton.class);
+    s1.exec();
+    Singleton s2 = c.resolve(Singleton.class);
+    s2.exec();
 
-    s.exec();
+    assertEquals(s1, s2);
 
-    Dependency d = c.resolve(Dependency.class);
+    Dependency d1 = c.resolve(Dependency.class);
+    assertEquals(2, d1.callCount());
 
-    assertEquals(1, d.callCount());
+    Dependency d2 = c.resolve(Dependency.class);
+
+    assertEquals(d1, d2);
+
+    c.close();
   }
   
   public interface Dependency {

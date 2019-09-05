@@ -1,5 +1,9 @@
 # Release Notes
 
+## GH-10
+
+Fix minor logging issues.
+
 ## GH-8
 
 Prevent creating a new scope from a scoped container.

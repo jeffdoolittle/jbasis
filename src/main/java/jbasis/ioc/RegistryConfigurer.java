@@ -110,7 +110,7 @@ class RegistryConfigurerImpl implements RegistryConfigurer {
   private <S, I extends S> void add(Class<S> serviceType, ServiceLifetime lifetime,
       Class<I> implementationType) {
     actions.add(x -> x.add(serviceType, lifetime, implementationType));
-    logger.info("Registered {} {} -> {}", lifetime, serviceType.getName());
+    logger.info("Registered {} {} -> {}", lifetime, serviceType.getName(), implementationType.getName());
   }
 
   @Override

@@ -3,6 +3,7 @@ package jbasis.ioc;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -72,16 +73,16 @@ public final class ContainerImpl implements Container, AutoCloseable {
       });
     } else if (descriptor.getServiceLifetime() == ServiceLifetime.SCOPED) {
       sf.factory = () -> {
-        debug(initializingFormat, ServiceLifetime.SINGLETON, name);
+        debug(initializingFormat, ServiceLifetime.SCOPED, name);
         Object service = createProxy(descriptor);
-        logger.info(initializedFormat, ServiceLifetime.SINGLETON, service, name);
+        logger.info(initializedFormat, ServiceLifetime.SCOPED, service, name);
         return service;
       };
     } else {
       sf.factory = () -> {
-        debug(initializingFormat, ServiceLifetime.SINGLETON, name);
+        debug(initializingFormat, ServiceLifetime.TRANSIENT, name);
         Object service = createProxy(descriptor);
-        logger.info(initializedFormat, ServiceLifetime.SINGLETON, service, name);
+        logger.info(initializedFormat, ServiceLifetime.TRANSIENT, service, name);
         return service;
       };
     }
@@ -119,7 +120,7 @@ public final class ContainerImpl implements Container, AutoCloseable {
 
     Constructor<?> constructor = optionalConstructor.get();
 
-    List<Object> dependencies = resolveServiceDependencies(constructor);
+    List<Object> dependencies = resolveServiceDependencies(constructor, descriptor.getImplementationType().getName());
 
     try {
       return constructor.newInstance(dependencies.toArray());
@@ -130,17 +131,20 @@ public final class ContainerImpl implements Container, AutoCloseable {
     }
   }
 
-  private List<Object> resolveServiceDependencies(Constructor<?> constructor) {
+  private List<Object> resolveServiceDependencies(Constructor<?> constructor, String implementationTypeName) {
     Class<?>[] dependencyTypes = constructor.getParameterTypes();
+    
     List<Object> dependencies = new ArrayList<>();
     for(Class<?> dependencyType : dependencyTypes) {
       String typeName = dependencyType.getTypeName();
       if (!suppliers.containsKey(typeName)){
         dependencies.add(null);
       } else {
+        logger.debug("AUTORESOLVE - {} for {}", typeName, implementationTypeName);
         ServiceFactory dependencyFactory = suppliers.get(typeName);
         Object dependency = dependencyFactory.factory.get();
         dependencies.add(dependency);
+        logger.info("Resolved {} dependency for {}", typeName, implementationTypeName);
       }
     }
     return dependencies;
