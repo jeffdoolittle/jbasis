@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import jbasis.logging.Logger;
+import jbasis.logging.LoggerFactory;
 
 /**
  * DSL entry point for registry configuration
@@ -93,11 +94,10 @@ public interface RegistryConfigurer {
 
 class RegistryConfigurerImpl implements RegistryConfigurer {
 
-  private final Logger logger;
+  private static final Logger logger = LoggerFactory.get(RegistryConfigurer.class);
   private final List<Consumer<ServiceCollection>> actions;
 
-  public RegistryConfigurerImpl(Logger logger, List<Consumer<ServiceCollection>> actions) {
-    this.logger = logger;
+  public RegistryConfigurerImpl(List<Consumer<ServiceCollection>> actions) {
     this.actions = actions;
   }
 

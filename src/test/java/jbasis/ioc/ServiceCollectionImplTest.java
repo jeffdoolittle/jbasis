@@ -1,7 +1,6 @@
 package jbasis.ioc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.stream.StreamSupport;
 
@@ -45,5 +44,23 @@ public class ServiceCollectionImplTest {
     String value = (String)sd.getFactory().apply(null);
 
     assertEquals("two", value);
- }
+  }
+  
+  @Test public void last_registered_wins_when_registering_the_same_service_twice_by_type() {
+    ServiceCollection collection = new ServiceCollectionImpl();
+
+    collection.add(SomeService.class, ServiceLifetime.SINGLETON, SomeServiceOneImpl.class);
+    collection.add(SomeService.class, ServiceLifetime.SINGLETON, SomeServiceTwoImpl.class);
+
+    ServiceDescriptor sd = StreamSupport.stream(collection.spliterator(), false)
+    .filter(x -> x.getServiceType() == SomeService.class)
+    .findFirst()
+    .get();
+
+    assertEquals(sd.getImplementationType(), SomeServiceTwoImpl.class); 
+  }
+
+  public interface SomeService {}
+  public class SomeServiceOneImpl implements SomeService {}
+  public class SomeServiceTwoImpl implements SomeService {}
 }

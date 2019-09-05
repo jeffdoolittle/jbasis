@@ -21,7 +21,7 @@ public abstract class Registry {
    */
   public Registry() {
     actions = new ArrayList<>();
-    configurer = new RegistryConfigurerImpl(logger, actions);
+    configurer = new RegistryConfigurerImpl(actions);
     logger.info("Initialized {}", getClass().getName());
   }
 
