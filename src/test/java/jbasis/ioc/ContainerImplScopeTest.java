@@ -41,7 +41,7 @@ public class ContainerImplScopeTest {
   @Test public void singleton_and_transient_can_be_resolved_from_scope() {
     Container container = new ContainerImpl(cfg -> cfg.apply(ScopeTestRegistry.class));
 
-    Container scope = container.createScope();
+    ServiceFactory scope = container.createScope();
 
     ScopeTestSingletonService s1 = scope.resolve(ScopeTestSingletonService.class);
     ScopeTestSingletonService s2 = scope.resolve(ScopeTestSingletonService.class);
@@ -74,7 +74,7 @@ public class ContainerImplScopeTest {
   @Test public void can_resolve_scoped_service_from_scope() {
     Container container = new ContainerImpl(cfg -> cfg.apply(ScopeTestRegistry.class));
 
-    Container scope = container.createScope();
+    ServiceFactory scope = container.createScope();
 
     ScopedService svc1 = scope.resolve(ScopedService.class);
     ScopedService svc2 = scope.resolve(ScopedService.class);

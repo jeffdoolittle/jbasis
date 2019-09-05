@@ -1,5 +1,9 @@
 # Release Notes
 
+## GH-8
+
+Prevent creating a new scope from a scoped container.
+
 ## GH-4
 
 Automatic dependency resolution.
