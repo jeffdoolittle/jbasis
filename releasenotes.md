@@ -1,5 +1,9 @@
 # Release Notes
 
+## GH-6
+
+Validation interceptors.
+
 ## GH-11
 
 Fix method overloading resolution.
@@ -26,7 +30,7 @@ Implement scoped container.
 
 ## GH-1
 
-Implement basic ioc and interception.
+Implement basic IoC and interception.
 
 Basic inversion of control container implementation with
 Singleton and Transient lifetime handling.
