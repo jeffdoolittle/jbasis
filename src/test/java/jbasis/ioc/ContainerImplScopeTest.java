@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 
 import jbasis.logging.Log4JLogger;
 import jbasis.logging.LoggerFactory;
+import jbasis.util.JBasisException;
 
 public class ContainerImplScopeTest {
 

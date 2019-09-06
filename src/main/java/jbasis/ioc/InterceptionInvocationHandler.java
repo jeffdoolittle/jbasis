@@ -1,4 +1,4 @@
-package jbasis.ioc.interception;
+package jbasis.ioc;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
@@ -12,10 +12,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Deque;
-import jbasis.ioc.Container;
-import jbasis.ioc.JBasisException;
 
-public class InterceptionInvocationHandler implements InvocationHandler {
+import jbasis.interception.Interceptor;
+import jbasis.interception.WithInterceptor;
+import jbasis.util.JBasisException;
+
+class InterceptionInvocationHandler implements InvocationHandler {
 
   private final Map<String, Method> methods = new HashMap<>();
   private Container container;

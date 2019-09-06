@@ -18,13 +18,14 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import jbasis.ioc.interception.EmptyInterceptor;
-import jbasis.ioc.interception.HandleError;
-import jbasis.ioc.interception.Profile;
-import jbasis.ioc.interception.Retry;
-import jbasis.ioc.interception.WithInterceptor;
+import jbasis.interception.EmptyInterceptor;
+import jbasis.interception.HandleError;
+import jbasis.interception.Profile;
+import jbasis.interception.Retry;
+import jbasis.interception.WithInterceptor;
 import jbasis.logging.Log4JLogger;
 import jbasis.logging.LoggerFactory;
+import jbasis.util.JBasisException;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;

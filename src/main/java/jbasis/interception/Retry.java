@@ -1,4 +1,4 @@
-package jbasis.ioc.interception;
+package jbasis.interception;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

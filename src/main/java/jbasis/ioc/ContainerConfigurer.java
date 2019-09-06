@@ -1,6 +1,7 @@
 package jbasis.ioc;
 
 import java.lang.reflect.Constructor;
+import jbasis.util.JBasisException;
 
 /**
  * Container configuration DSL entry point.

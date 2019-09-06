@@ -1,4 +1,4 @@
-package jbasis.ioc;
+package jbasis.util;
 
 /**
  * Exception type for all jbasis exceptions.

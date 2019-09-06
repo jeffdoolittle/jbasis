@@ -7,10 +7,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
-import jbasis.ioc.interception.EmptyInterceptor;
+import jbasis.interception.EmptyInterceptor;
 import jbasis.logging.Level;
 import jbasis.logging.Log4JLogger;
 import jbasis.logging.LoggerFactory;
+import jbasis.util.JBasisException;
 
 public class CoverageTest {
 

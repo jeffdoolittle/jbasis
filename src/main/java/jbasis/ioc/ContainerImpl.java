@@ -14,9 +14,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import jbasis.ioc.interception.InterceptionInvocationHandler;
 import jbasis.logging.Logger;
 import jbasis.logging.LoggerFactory;
+import jbasis.util.JBasisException;
 
 /**
  * Default Container implementation
