@@ -1,5 +1,13 @@
 # Release Notes
 
+## GH-11
+
+Fix method overloading resolution.
+
+Currently the InterceptionInvocationHandler fails if the
+proxied service has overloaded methods (methods with the
+same name).
+
 ## GH-10
 
 Fix minor logging issues.

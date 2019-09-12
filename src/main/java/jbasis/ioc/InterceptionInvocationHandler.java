@@ -7,8 +7,10 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Deque;
@@ -35,7 +37,8 @@ class InterceptionInvocationHandler implements InvocationHandler {
 
     for (Method method : target.getClass().getDeclaredMethods()) {
       makeAccessible(method);
-      this.methods.put(method.getName(), method);
+      var key = getMethodKey(method);
+      this.methods.put(key, method);
     }
   }
 
@@ -48,8 +51,9 @@ class InterceptionInvocationHandler implements InvocationHandler {
       return proxy == args[0];
     }
 
-    Method implementationMethod = methods.get(serviceMethod.getName());
-    Deque<Interceptor> interceptors = resolveInterceptors(implementationMethod);
+    var key = getMethodKey(serviceMethod);
+    var implementationMethod = methods.get(key);
+    var interceptors = resolveInterceptors(implementationMethod);
 
     for (Interceptor interceptor : interceptors) {
       boolean continueExecuting = interceptor.beforeInvoke(proxy, target, implementationMethod, args);
@@ -59,7 +63,7 @@ class InterceptionInvocationHandler implements InvocationHandler {
     }
 
     Object result = null;
-    boolean wasHandled = false;
+    var wasHandled = false;
     try {
       
       result = implementationMethod.invoke(target, args);
@@ -72,13 +76,13 @@ class InterceptionInvocationHandler implements InvocationHandler {
         }
       }
       if (!wasHandled) {
-        Throwable cause = ex.getCause();
+        var cause = ex.getCause();
         throw new JBasisException(cause.getMessage(), cause);
       }
     }
 
     while (!interceptors.isEmpty()) {
-      Interceptor interceptor = interceptors.pop();
+      var interceptor = interceptors.pop();
       interceptor.afterInvoke(proxy, target, implementationMethod, args, result);
     }
 
@@ -86,9 +90,9 @@ class InterceptionInvocationHandler implements InvocationHandler {
   }
 
   private Deque<Interceptor> resolveInterceptors(Method implementationMethod) {
-    Deque<Interceptor> interceptors = new ArrayDeque<>();
-    for (Annotation annotation : implementationMethod.getAnnotations()) {
-      Interceptor interceptor = resolveInterceptor(annotation);
+    var interceptors = new ArrayDeque<Interceptor>();
+    for (var annotation : implementationMethod.getAnnotations()) {
+      var interceptor = resolveInterceptor(annotation);
       interceptor.setContainer(container);
       interceptors.add(interceptor);
     }
@@ -99,7 +103,7 @@ class InterceptionInvocationHandler implements InvocationHandler {
     Class<?> interceptorClass = null;
 
     try {
-      WithInterceptor withInterceptor = annotation.annotationType()
+      var withInterceptor = annotation.annotationType()
           .getAnnotation(WithInterceptor.class);
   
       if (withInterceptor == null) {
@@ -116,14 +120,13 @@ class InterceptionInvocationHandler implements InvocationHandler {
       throw new JBasisException(e.getMessage(), e);
     }
 
-    Optional<Constructor<?>> optCtor = Arrays.asList(interceptorClass.getConstructors())
-        .stream().findFirst();
+    var optCtor = Arrays.asList(interceptorClass.getConstructors()).stream().findFirst();
     
     if (!optCtor.isPresent()) {
       throw new JBasisException("Constructor expected for interceptor but none was found.");
     }
     
-    Constructor<?> constructor = optCtor.get();
+    var constructor = optCtor.get();
   
     makeAccessible(constructor);
 
@@ -136,9 +139,21 @@ class InterceptionInvocationHandler implements InvocationHandler {
     }
   }
 
-  // suppress SonarQuber Security Hotspot warning
+  // suppress SonarQube Security Hotspot warning
   @java.lang.SuppressWarnings("squid:S3011")
   private void makeAccessible(AccessibleObject member) {
     member.setAccessible(true); 
+  }
+  
+  private static String getMethodKey(Method m) {
+    var sb = new StringBuilder();
+    sb.append(m.getName());
+    sb.append(":");
+    var parameterTypeNames = new ArrayList<String>();
+    for (Class<?> p : m.getParameterTypes()) {
+      sb.append(p.getName());
+    }
+    sb.append(String.join(":", parameterTypeNames));
+    return sb.toString();
   }
 }

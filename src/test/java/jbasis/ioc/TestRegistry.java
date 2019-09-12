@@ -3,6 +3,8 @@ package jbasis.ioc;
 import java.time.Instant;
 import java.util.Date;
 
+import jbasis.util.JBasisException;
+
 class TestRegistry extends Registry {
   public TestRegistry() {
     register(cfg -> {
