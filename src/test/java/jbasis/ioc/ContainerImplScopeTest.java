@@ -3,6 +3,7 @@ package jbasis.ioc;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -89,6 +90,22 @@ public class ContainerImplScopeTest {
 
     container.close();
   }
+
+  @Test public void can_resolve_scoped_service_with_scoped_dependency() {
+    Container container = new ContainerImpl(cfg -> cfg.apply(ScopeTestRegistry.class));
+  
+    ServiceFactory scope = container.createScope();
+  
+    ScopedWithScopedDependency svc = scope.resolve(ScopedWithScopedDependency.class);
+  
+    assertNotNull(svc);
+  
+    assertNotNull(svc.getDep());
+
+    scope.close();
+
+    container.close();
+  }
 }
 
 class ScopeTestRegistry extends Registry {
@@ -96,6 +113,8 @@ class ScopeTestRegistry extends Registry {
     register(cfg -> cfg.addSingleton(ScopeTestSingletonService.class, x -> new SingletonImpl()));
     register(cfg -> cfg.addScoped(ScopedService.class, x -> new ScopedImpl()));
     register(cfg -> cfg.addTransient(ScopeTestTransientService.class, x -> new TransientImpl()));
+    register(cfg -> cfg.addScoped(ScopedDependency.class, x -> new ScopedDependencyImpl()));
+    register(cfg -> cfg.addScoped(ScopedWithScopedDependency.class, x -> new ScopedWithScopedDependencyImpl(x.resolve(ScopedDependency.class))));
   }
 }
 
@@ -172,4 +191,28 @@ class TransientImpl implements ScopeTestTransientService {
   public UUID getId() {
     return _id;
   }
+}
+
+interface ScopedWithScopedDependency {
+  ScopedDependency getDep() ;
+}
+
+class ScopedWithScopedDependencyImpl implements ScopedWithScopedDependency {
+  private ScopedDependency dep;
+
+  ScopedWithScopedDependencyImpl(ScopedDependency dep) {
+    this.dep = dep;
+  }
+
+  public ScopedDependency getDep() {
+    return dep;
+  }
+}
+
+interface ScopedDependency {
+
+}
+
+class ScopedDependencyImpl  implements ScopedDependency{
+
 }

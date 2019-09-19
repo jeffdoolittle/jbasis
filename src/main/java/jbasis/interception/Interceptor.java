@@ -1,19 +1,19 @@
 package jbasis.interception;
 
 import java.lang.reflect.Method;
-import jbasis.ioc.Container;
+import jbasis.ioc.ServiceFactory;
 
 /**
  * Interceptors provide aspect oriented functionality to clases.
  */
 public interface Interceptor {
   /**
-   * Provides a container which can be used to resolve other 
+   * Provides a ServiceFactory which can be used to resolve other 
    * services on which an Interceptor may depend.
    * 
-   * @param container the container to be used for service resolution
+   * @param serviceFactory the ServiceFactory to be used for service resolution
    */
-  void setContainer(Container container);
+  void setServiceFactory(ServiceFactory serviceFactory);
 
   /**
    * Executes before a method is invoked.

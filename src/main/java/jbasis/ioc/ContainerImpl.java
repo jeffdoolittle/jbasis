@@ -12,7 +12,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import jbasis.logging.Logger;
 import jbasis.logging.LoggerFactory;
@@ -24,7 +23,7 @@ import jbasis.util.JBasisException;
 public final class ContainerImpl implements Container, AutoCloseable {
  
   private final Logger logger = LoggerFactory.get(getClass());
-  private Map<String, ServiceFactory> suppliers = new HashMap<>();
+  private Map<String, FactoryDescriptor> descriptors = new HashMap<>();
   private boolean isScoped = false;
 
   private ContainerImpl() {}
@@ -56,7 +55,7 @@ public final class ContainerImpl implements Container, AutoCloseable {
   private void register(ServiceDescriptor descriptor) {
     String name = descriptor.getServiceType().getTypeName();
 
-    ServiceFactory sf = new ServiceFactory();
+    FactoryDescriptor sf = new FactoryDescriptor();
     sf.lifetime = descriptor.getServiceLifetime();
     sf.serviceType = descriptor.getServiceType();
 
@@ -64,44 +63,44 @@ public final class ContainerImpl implements Container, AutoCloseable {
     final String initializedFormat = "Initialized {} Service {} for {}";
 
     if (descriptor.getServiceLifetime() == ServiceLifetime.SINGLETON) {
-      sf.factory = new Lazy<>(() -> {
+      sf.factory = new LazyFactory<>(ctx -> {
         debug(initializingFormat, ServiceLifetime.SINGLETON, name);
-        Object service = createProxy(descriptor);
+        Object service = createProxy(ctx, descriptor);
         logger.info(initializedFormat, ServiceLifetime.SINGLETON, service, name);
         return service;
       });
     } else if (descriptor.getServiceLifetime() == ServiceLifetime.SCOPED) {
-      sf.factory = () -> {
+      sf.factory = ctx -> {
         debug(initializingFormat, ServiceLifetime.SCOPED, name);
-        Object service = createProxy(descriptor);
+        Object service = createProxy(ctx, descriptor);
         logger.info(initializedFormat, ServiceLifetime.SCOPED, service, name);
         return service;
       };
     } else {
-      sf.factory = () -> {
+      sf.factory = ctx -> {
         debug(initializingFormat, ServiceLifetime.TRANSIENT, name);
-        Object service = createProxy(descriptor);
+        Object service = createProxy(ctx, descriptor);
         logger.info(initializedFormat, ServiceLifetime.TRANSIENT, service, name);
         return service;
       };
     }
 
-    suppliers.put(name, sf);
+    descriptors.put(name, sf);
   }
 
-  private Object createProxy(ServiceDescriptor descriptor) {
-    Function<Container, Object> factory = descriptor.getFactory();
+  private Object createProxy(ServiceFactory context, ServiceDescriptor descriptor) {
+    Function<ServiceFactory, Object> factory = descriptor.getFactory();
     Object service = null;
 
     if (factory != null) {
-      service = factory.apply(this);
+      service = factory.apply(context);
     } else {
       service = constructService(descriptor);
     }
 
     if (descriptor.getServiceType().isInterface()) {
       service = Proxy.newProxyInstance(ContainerImpl.class.getClassLoader(),
-          new Class[] {descriptor.getServiceType()}, new InterceptionInvocationHandler(this, service));
+          new Class[] {descriptor.getServiceType()}, new InterceptionInvocationHandler(context, service));
     }
     return service;
   }
@@ -136,12 +135,12 @@ public final class ContainerImpl implements Container, AutoCloseable {
     List<Object> dependencies = new ArrayList<>();
     for(Class<?> dependencyType : dependencyTypes) {
       String typeName = dependencyType.getTypeName();
-      if (!suppliers.containsKey(typeName)){
+      if (!descriptors.containsKey(typeName)){
         dependencies.add(null);
       } else {
         logger.debug("AUTORESOLVE - {} for {}", typeName, implementationTypeName);
-        ServiceFactory dependencyFactory = suppliers.get(typeName);
-        Object dependency = dependencyFactory.factory.get();
+        FactoryDescriptor dependencyFactory = descriptors.get(typeName);
+        Object dependency = dependencyFactory.factory.apply(this);
         dependencies.add(dependency);
         logger.info("Resolved {} dependency for {}", typeName, implementationTypeName);
       }
@@ -149,9 +148,9 @@ public final class ContainerImpl implements Container, AutoCloseable {
     return dependencies;
   }
 
-  private class ServiceFactory {
+  private class FactoryDescriptor {
     ServiceLifetime lifetime;
-    Supplier<?> factory;
+    Function<ServiceFactory, ?> factory;
     Class<?> serviceType;
   }
 
@@ -160,13 +159,13 @@ public final class ContainerImpl implements Container, AutoCloseable {
   public <T> T resolve(Class<T> cls) {
     debug("Resolving Service " + cls.getName());
     String key = getKey(cls);
-    if (suppliers.containsKey(key)) {
-      ServiceFactory sf = suppliers.get(key);
+    if (descriptors.containsKey(key)) {
+      FactoryDescriptor sf = descriptors.get(key);
       if (sf.lifetime == ServiceLifetime.SCOPED 
           && !isScoped) {
         throw new JBasisException("Cannot resolve scoped services in root scope");
       }
-      Object service = sf.factory.get();
+      Object service = sf.factory.apply(this);
       logger.info("Resolved {} Service {} for {}", sf.lifetime, cls.getName(), service);
       return (T) service;
     }
@@ -181,13 +180,13 @@ public final class ContainerImpl implements Container, AutoCloseable {
     debug("Resolving Service {}", cls.getName());
     try {
       String key = getKey(cls);
-      if (suppliers.containsKey(key)) {
-        ServiceFactory sf = suppliers.get(key);
+      if (descriptors.containsKey(key)) {
+        FactoryDescriptor sf = descriptors.get(key);
         if (sf.lifetime == ServiceLifetime.SCOPED 
             && !isScoped) {
           throw new JBasisException("Cannot resolve scoped services in root scope");
         }
-        Object service = sf.factory.get();
+        Object service = sf.factory.apply(this);
         logger.info("Resolved {} Service {} for {}", sf.lifetime,  cls.getName(), service);
         return Optional.of((T) service);
       }
@@ -207,12 +206,12 @@ public final class ContainerImpl implements Container, AutoCloseable {
   public void close() {
     String type = isScoped ? "Scope" : "Root Scope";
     debug("Closing " + type);
-    for (Entry<String, ServiceFactory> entry : suppliers.entrySet()) {
-      ServiceFactory sf = entry.getValue();
+    for (Entry<String, FactoryDescriptor> entry : descriptors.entrySet()) {
+      FactoryDescriptor sf = entry.getValue();
       if (!isPotentiallyCloseable(sf)) {
         continue;
       }
-      Object service = sf.factory.get();
+      Object service = sf.factory.apply(this);
       Class<?> serviceType = sf.serviceType;
       try {
         if (AutoCloseable.class.isInstance(service)) {
@@ -226,7 +225,7 @@ public final class ContainerImpl implements Container, AutoCloseable {
         logger.error("Error closing Container: " + e.getMessage(), e);
       }
     }
-    suppliers.clear();
+    descriptors.clear();
     logger.info("Closed " + type);
   }
 
@@ -234,17 +233,17 @@ public final class ContainerImpl implements Container, AutoCloseable {
   public Container createScope() {
     ContainerImpl scope = new ContainerImpl();
     scope.isScoped = true;
-    for(Entry<String, ServiceFactory> entry : suppliers.entrySet()) {
-      ServiceFactory sf = entry.getValue();
+    for(Entry<String, FactoryDescriptor> entry : descriptors.entrySet()) {
+      FactoryDescriptor sf = entry.getValue();
       if (sf.lifetime == ServiceLifetime.TRANSIENT 
           || sf.lifetime == ServiceLifetime.SINGLETON) {
-        scope.suppliers.put(entry.getKey(), sf);
+        scope.descriptors.put(entry.getKey(), sf);
       } else {
-        ServiceFactory scopedFactory = new ServiceFactory();
+        FactoryDescriptor scopedFactory = new FactoryDescriptor();
         scopedFactory.serviceType = sf.serviceType;
         scopedFactory.lifetime = sf.lifetime;
-        scopedFactory.factory = new Lazy<>(sf.factory);
-        scope.suppliers.put(entry.getKey(), scopedFactory);
+        scopedFactory.factory = new LazyFactory<>(sf.factory);
+        scope.descriptors.put(entry.getKey(), scopedFactory);
       }
     }
     logger.info("New scope created");
@@ -262,13 +261,13 @@ public final class ContainerImpl implements Container, AutoCloseable {
    * of the service for the sole purpose of then closing it after the 
    * fact.
    */
-  private boolean isPotentiallyCloseable(ServiceFactory sf) {
+  private boolean isPotentiallyCloseable(FactoryDescriptor sf) {
     boolean potentiallyCloseable = true;
     if (sf.lifetime == ServiceLifetime.TRANSIENT) {
       potentiallyCloseable = false;
     } else if (sf.lifetime == ServiceLifetime.SCOPED) {
       if (isScoped) {
-        Lazy<?> lazy = (Lazy<?>)sf.factory;
+        LazyFactory<?> lazy = (LazyFactory<?>)sf.factory;
         if (!lazy.isPresent()) {
           potentiallyCloseable = false;
         }
@@ -276,7 +275,7 @@ public final class ContainerImpl implements Container, AutoCloseable {
       potentiallyCloseable = false;
       }      
     } else {
-      Lazy<?> lazy = (Lazy<?>)sf.factory;
+      LazyFactory<?> lazy = (LazyFactory<?>)sf.factory;
       if (!lazy.isPresent()) {
         potentiallyCloseable = false;
       } else {

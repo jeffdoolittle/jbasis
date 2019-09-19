@@ -8,7 +8,7 @@ import java.util.function.Function;
 public interface ServiceCollection extends Iterable<ServiceDescriptor> {
 
   public <S, I extends S> void add(Class<S> serviceType, ServiceLifetime lifetime, 
-      Function<Container, I> factory);
+      Function<ServiceFactory, I> factory);
 
   public <S, I extends S> void add(Class<S> serviceType, 
       ServiceLifetime lifetime, Class<I> implementationType);

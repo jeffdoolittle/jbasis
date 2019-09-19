@@ -3,7 +3,7 @@ package jbasis.ioc;
 /**
  * A Root Scope Container for Service resolution.
  */
-public interface Container extends ServiceFactory, AutoCloseable {
+public interface Container extends ServiceFactory {
 
   /**
    * Creates a scoped service factory based on the configuration 

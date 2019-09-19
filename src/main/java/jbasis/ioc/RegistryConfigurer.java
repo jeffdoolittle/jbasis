@@ -23,7 +23,7 @@ public interface RegistryConfigurer {
    * @return the service instance
   */
   public <S, I extends S> RegistryConfigurer addSingleton(Class<S> serviceType,
-      Function<Container, I> factory);
+      Function<ServiceFactory, I> factory);
 
   /**
    * Adds a service factory with the SINGLETON lifecycle to the 
@@ -49,7 +49,7 @@ public interface RegistryConfigurer {
    * @return the service instance
    */
   public <S, I extends S> RegistryConfigurer addScoped(Class<S> serviceType,
-      Function<Container, I> factory);
+      Function<ServiceFactory, I> factory);
 
   /**
    * Adds a service factory with the SCOPED lifecycle to the 
@@ -75,7 +75,7 @@ public interface RegistryConfigurer {
    * @return the service instance
    */
   public <S, I extends S> RegistryConfigurer addTransient(Class<S> serviceType,
-      Function<Container, I> factory);
+      Function<ServiceFactory, I> factory);
 
   /**
    * Adds a service factory with the TRANSIENT lifecycle to the 
@@ -102,7 +102,7 @@ class RegistryConfigurerImpl implements RegistryConfigurer {
   }
 
   private <S, I extends S> void add(Class<S> serviceType, ServiceLifetime lifetime,
-    Function<Container, I> factory) {
+    Function<ServiceFactory, I> factory) {
       actions.add(x -> x.add(serviceType, lifetime, factory));
       logger.info("Registered {} {}", lifetime, serviceType.getName());
     }
@@ -115,21 +115,21 @@ class RegistryConfigurerImpl implements RegistryConfigurer {
 
   @Override
   public <S, I extends S> RegistryConfigurer addSingleton(Class<S> serviceType,
-      Function<Container, I> factory) {
+      Function<ServiceFactory, I> factory) {
     add(serviceType, ServiceLifetime.SINGLETON, factory);
     return this;
   }
 
   @Override
   public <S, I extends S> RegistryConfigurer addScoped(Class<S> serviceType,
-      Function<Container, I> factory) {
+      Function<ServiceFactory, I> factory) {
     add(serviceType, ServiceLifetime.SCOPED, factory);
     return this;
   }
 
   @Override
   public <S, I extends S> RegistryConfigurer addTransient(Class<S> serviceType,
-      Function<Container, I> factory) {
+      Function<ServiceFactory, I> factory) {
     add(serviceType, ServiceLifetime.TRANSIENT, factory);
     return this;
   }

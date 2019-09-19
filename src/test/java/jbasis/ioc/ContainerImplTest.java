@@ -270,7 +270,7 @@ class ErrorHandler extends EmptyInterceptor {
 
   @Override
   public boolean onError(Object proxy, Object target, Method method, Object[] args, Throwable throwable) {
-    this.getContainer().resolve(String.class);
+    this.getServiceFactory().resolve(String.class);
     if (args[0].equals(4))
     {
       return false;
