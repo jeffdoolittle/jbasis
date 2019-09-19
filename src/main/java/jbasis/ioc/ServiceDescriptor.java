@@ -7,7 +7,7 @@ import java.util.function.Function;
  */
 public final class ServiceDescriptor {
 
-  private Function<Container, Object> factory;
+  private Function<ServiceFactory, Object> factory;
   private Class<?> serviceType;
   private Class<?> implementationType;
   private ServiceLifetime serviceLifetime;
@@ -25,7 +25,7 @@ public final class ServiceDescriptor {
    * @return the service instance.
    */
   public static <S, I extends S> ServiceDescriptor init(Class<S> serviceType, 
-      ServiceLifetime lifetime, Function<Container, I> factory) {
+      ServiceLifetime lifetime, Function<ServiceFactory, I> factory) {
     ServiceDescriptor descriptor = new ServiceDescriptor();
     descriptor.serviceType = serviceType;
     descriptor.serviceLifetime = lifetime;
@@ -52,7 +52,7 @@ public final class ServiceDescriptor {
     return descriptor;
   }
 
-  public Function<Container, Object> getFactory() {
+  public Function<ServiceFactory, Object> getFactory() {
     return this.factory;
   }
 

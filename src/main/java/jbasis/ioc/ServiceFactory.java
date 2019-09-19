@@ -5,7 +5,7 @@ import java.util.Optional;
 /**
  * A factory for Service resolution.
  */
-public interface ServiceFactory {
+public interface ServiceFactory extends AutoCloseable {
   /**
    * Resolves a service type type. Throws an exception 
    * if not found.

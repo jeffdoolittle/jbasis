@@ -2,7 +2,6 @@ package jbasis.ioc;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -10,9 +9,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Deque;
 
 import jbasis.interception.Interceptor;
@@ -22,7 +19,7 @@ import jbasis.util.JBasisException;
 class InterceptionInvocationHandler implements InvocationHandler {
 
   private final Map<String, Method> methods = new HashMap<>();
-  private Container container;
+  private ServiceFactory serviceFactory;
   private Object target;
 
   /**
@@ -31,8 +28,8 @@ class InterceptionInvocationHandler implements InvocationHandler {
    * @param container the Container for resolving services.
    * @param target the target Object to be wrapped in a proxy.
    */
-  public InterceptionInvocationHandler(Container container, Object target) {
-    this.container = container;
+  public InterceptionInvocationHandler(ServiceFactory serviceFactory, Object target) {
+    this.serviceFactory = serviceFactory;
     this.target = target;
 
     for (Method method : target.getClass().getDeclaredMethods()) {
@@ -93,7 +90,7 @@ class InterceptionInvocationHandler implements InvocationHandler {
     var interceptors = new ArrayDeque<Interceptor>();
     for (var annotation : implementationMethod.getAnnotations()) {
       var interceptor = resolveInterceptor(annotation);
-      interceptor.setContainer(container);
+      interceptor.setServiceFactory(serviceFactory);
       interceptors.add(interceptor);
     }
     return interceptors;

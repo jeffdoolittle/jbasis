@@ -1,14 +1,14 @@
 package jbasis.interception;
 
 import java.lang.reflect.Method;
-import jbasis.ioc.Container;
+import jbasis.ioc.ServiceFactory;
 
 public abstract class EmptyInterceptor implements Interceptor {
 
-  private Container container;
+  private ServiceFactory serviceFactory;
 
-  protected Container getContainer() {
-    return this.container;
+  protected ServiceFactory getServiceFactory() {
+    return this.serviceFactory;
   }
 
   @Override
@@ -27,7 +27,7 @@ public abstract class EmptyInterceptor implements Interceptor {
   }
 
   @Override
-  public final void setContainer(Container container) {
-    this.container = container;
+  public final void setServiceFactory(ServiceFactory serviceFactory) {
+    this.serviceFactory = serviceFactory;
   }
 }

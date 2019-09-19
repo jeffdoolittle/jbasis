@@ -24,7 +24,7 @@ public final class ServiceCollectionImpl implements ServiceCollection {
 
   @Override
   public <S, I extends S> void add(Class<S> serviceType, ServiceLifetime lifetime, 
-      Function<Container, I> factory) {
+      Function<ServiceFactory, I> factory) {
     addDescriptor(serviceType, lifetime, factory);
   }
 
@@ -44,7 +44,7 @@ public final class ServiceCollectionImpl implements ServiceCollection {
    * @param factory the factory for creating a service instance
    */
   public <S, I extends S> void addDescriptor(Class<S> serviceType, ServiceLifetime lifetime, 
-      Function<Container, I> factory) {
+      Function<ServiceFactory, I> factory) {
     String serviceName = serviceType.getCanonicalName();
     if(serviceAlreadyRegistered(serviceName)) {
       logger.warn("{} already registered. Replacing with updated instance", serviceName);
